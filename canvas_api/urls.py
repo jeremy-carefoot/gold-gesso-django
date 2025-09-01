@@ -1,0 +1,22 @@
+from django.urls import path
+from .views import (
+    HealthCheckView,
+    CoursesView,
+    CourseDetailView,
+    AssignmentsView,
+    AssignmentDetailView,
+    CalendarEventsView,
+    UserProfileView
+)
+
+app_name = 'canvas_api'
+
+urlpatterns = [
+    path('health/', HealthCheckView.as_view(), name='health-check'),
+    path('courses/', CoursesView.as_view(), name='courses'),
+    path('courses/<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
+    path('courses/<int:course_id>/assignments/', AssignmentsView.as_view(), name='assignments'),
+    path('courses/<int:course_id>/assignments/<int:assignment_id>/', AssignmentDetailView.as_view(), name='assignment-detail'),
+    path('calendar-events/', CalendarEventsView.as_view(), name='calendar-events'),
+    path('profile/', UserProfileView.as_view(), name='user-profile'),
+]
