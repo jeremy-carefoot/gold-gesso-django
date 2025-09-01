@@ -24,6 +24,7 @@ staticfiles/
 
 # Environment variables
 .env
+.env.docker
 .env.local
 .env.*.local
 
