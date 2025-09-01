@@ -49,7 +49,7 @@ make run
 4. Click "+ New Access Token"
 5. Add a description and generate token
 6. **Save the token immediately** (you can't see it again!)
-7. Add it to your `.env` or `.env.docker` file
+7. Add it to your `.env` and `.env.docker` file
 
 ## Available Commands
 
@@ -62,14 +62,16 @@ make run
 - `make clean` - Remove virtual environment and cache files
 
 ### Docker Development
-- `make docker-setup` - Copy env file for Docker setup
 - `make docker-build` - Build Docker image
 - `make docker-up` - Start all services (Django + PostgreSQL + Redis)
 - `make docker-migrate` - Run database migrations in container
+- `make docker-superuser` - Create superuser with username <whoami> (The output of that bash command) and password "admin"
 - `make docker-down` - Stop all services
 - `make docker-shell` - Open shell in Django container
 - `make docker-logs` - View logs from all services
 - `make docker-clean` - Remove all Docker containers and volumes
+
+### All below is subject to change and has not been reviewed by Orion.
 
 ## API Endpoints
 
