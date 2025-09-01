@@ -3,12 +3,16 @@ from rest_framework import serializers
 
 class CourseSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(read_only=True)
-    course_code = serializers.CharField(read_only=True)
-    enrollment_term_id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True, default='Unnamed Course', allow_blank=True)
+    course_code = serializers.CharField(read_only=True, required=False, allow_blank=True)
+    enrollment_term_id = serializers.IntegerField(read_only=True, required=False)
     start_at = serializers.DateTimeField(read_only=True, allow_null=True)
     end_at = serializers.DateTimeField(read_only=True, allow_null=True)
     enrollments = serializers.ListField(read_only=True, required=False)
+    workflow_state = serializers.CharField(read_only=True, required=False)
+    term = serializers.DictField(read_only=True, required=False)
+    course_progress = serializers.DictField(read_only=True, required=False)
+    image_download_url = serializers.URLField(read_only=True, required=False, allow_null=True)
 
 
 class AssignmentSerializer(serializers.Serializer):

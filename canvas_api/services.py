@@ -32,8 +32,26 @@ class CanvasAPIService:
             raise Exception(f"Canvas API request failed: {str(e)}")
     
     def get_courses(self, enrollment_state: str = 'active') -> List[Dict]:
-        """Get list of courses for the authenticated user"""
-        params = {'enrollment_state': enrollment_state}
+        """Get list of courses for the authenticated user
+        
+        Canvas API parameters used:
+        - enrollment_state: Filter by enrollment state
+        - include[]: Additional data to include
+        - per_page: Number of results (max 100)
+        """
+        params = {
+            'enrollment_state': enrollment_state,
+            'include[]': [
+                'term',           # Include term information
+                'course_progress',  # Include progress info
+                'sections',       # Include course sections
+                'total_scores',   # Include grade info
+                'current_grading_period_scores',  # Current grades
+                'course_image',   # Course banner image
+                'concluded'       # Include concluded courses
+            ],
+            'per_page': 100  # Get more results at once
+        }
         return self._make_request('GET', '/api/v1/courses', params=params)
     
     def get_course(self, course_id: int) -> Dict:
