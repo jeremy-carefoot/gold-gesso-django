@@ -14,6 +14,9 @@ cd uofa_planner_django
 # Edit Docker environment file with your Canvas credentials
 # Edit .env.docker with your Canvas API token
 
+# Build the Django containers
+make docker-build
+
 # Start all services (Django + PostgreSQL + Redis)
 make docker-up
 
