@@ -148,7 +148,9 @@ REST_FRAMEWORK = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:3001', cast=lambda v: [s.strip() for s in v.split(',')])
+TRUSTED_ORIGINS = 'http://localhost:3000,http://localhost:3001'
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default=TRUSTED_ORIGINS, cast=lambda v: [s.strip() for s in v.split(',')])
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default=TRUSTED_ORIGINS, cast=lambda v: [s.strip() for s in v.split(',')])
 CORS_ALLOW_CREDENTIALS = True
 
 # Canvas API Configuration
