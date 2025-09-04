@@ -4,7 +4,7 @@ from .models import Assignment, Course
 from django.contrib.auth.models import User
 
 @shared_task
-def create_assignments(user_id):
+def refreash_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
     user = User.objects.get(id=user_id)
     service = CanvasAPIService()
@@ -32,10 +32,15 @@ def create_assignments(user_id):
             }
             # Remove None values
             assignment_data = {k: v for k, v in assignment_data.items() if v is not None}
-            newAssignment = Assignment.objects.create(**assignment_data)
+            # Extract the id for lookup, use the rest as defaults
+            assignment_id = assignment_data.pop('id')
+            newAssignment = Assignment.objects.update_or_create(
+                id=assignment_id,
+                defaults=assignment_data
+            )
 
 @shared_task
-def create_courses(user_id):
+def refreash_courses(user_id):
     """This function processes the canvas API responses for courses and creates Course model instances."""
     user = User.objects.get(id=user_id)
     service = CanvasAPIService()
@@ -52,4 +57,8 @@ def create_courses(user_id):
         }
         # Remove None values
         course_data = {k: v for k, v in course_data.items() if v is not None}
-        newCourse = Course.objects.create(**course_data)
+        course_id = course_data.pop('id')
+        newCourse = Course.objects.update_or_create(
+            id = course_id,
+            defaults=course_data
+            )

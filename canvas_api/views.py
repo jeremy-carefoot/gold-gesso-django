@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
-from .tasks import create_assignments, create_courses
+from .tasks import refreash_assignments, refreash_courses
 from .models import Assignment, Course
 
 from .services import CanvasAPIService
@@ -87,9 +87,10 @@ class AllAssignmentsView(APIView):
 
     def get(self, request):
         """Get all assignments for all courses"""
-        # self.request.user.id # pass this to the task
+        refreash_courses.delay(self.request.user.id)
+        refreash_assignments.delay(self.request.user.id)
         queryset = Assignment.objects.all()
-        serializedData = Assignment(queryset, many=True).data
+        serializedData = AssignmentSerializer(queryset, many=True).data
         return Response(serializedData, status=status.HTTP_200_OK)
     
     def post(self, request):

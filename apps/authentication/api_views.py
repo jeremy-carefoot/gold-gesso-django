@@ -9,7 +9,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer
-from canvas_api.tasks import create_assignments, create_courses
 
 
 class RegisterView(APIView):
@@ -20,10 +19,6 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
-
-            create_courses(user.id) # This is temp, im not sure where to call this yet
-            create_assignments(user.id)
-
             return Response({
                 'user': UserSerializer(user).data,
                 'refresh': str(refresh),
@@ -44,10 +39,6 @@ class LoginView(APIView):
             
             if user:
                 refresh = RefreshToken.for_user(user)
-
-                create_courses(user.id) # see above
-                create_assignments(user.id)
-
                 return Response({
                     'user': UserSerializer(user).data,
                     'refresh': str(refresh),
