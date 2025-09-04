@@ -4,6 +4,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
+from .tasks import refreash_assignments, refreash_courses
+from .models import Assignment, Course
 
 from .services import CanvasAPIService
 from .serializers import (
@@ -62,7 +64,7 @@ class CourseDetailView(APIView):
             )
 
 
-class AssignmentsView(APIView):
+class CourseAssignmentsView(APIView):
     """View for handling assignment-related operations"""
     permission_classes = [IsAuthenticated]
     
@@ -70,7 +72,7 @@ class AssignmentsView(APIView):
         """Get assignments for a specific course"""
         try:
             service = CanvasAPIService()
-            assignments = service.get_assignments(course_id)
+            assignments = service.get_course_assignments(course_id)
             serializer = AssignmentSerializer(assignments, many=True)
             return Response(serializer.data)
         except Exception as e:
@@ -78,8 +80,26 @@ class AssignmentsView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+class AllAssignmentsView(APIView):
+    """View which returns all assignments for all courses."""
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        """Get all assignments for all courses"""
+        refreash_courses.delay(self.request.user.id)
+        refreash_assignments.delay(self.request.user.id)
+        queryset = Assignment.objects.all()
+        serializedData = AssignmentSerializer(queryset, many=True).data
+        return Response(serializedData, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        pass
+        # THis method will be used to allow the manual assignmnt addition
 
+        
+
+# This should actually be a model view because we don't care to pass the course id when we are looking at a specific assignment.
 class AssignmentDetailView(APIView):
     """View for handling specific assignment operations"""
     permission_classes = [IsAuthenticated]

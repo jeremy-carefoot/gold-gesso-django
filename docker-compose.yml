@@ -43,6 +43,21 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: celery -A canvas_backend worker -l INFO --concurrency 2
+    volumes:
+      - .:/code
+    env_file:
+      - ./.env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:
