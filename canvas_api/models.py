@@ -8,23 +8,29 @@ class PrettyJSONEncoder(json.JSONEncoder):
         super().__init__(*args, indent=2, sort_keys=True, **kwargs)
 class Course(models.Model):
     id = models.IntegerField(primary_key=True)
-    uuid = models.IntegerField()
+    uuid = models.CharField()
     name = models.CharField()
     # grading_standard_id = ???
-    calendar = models.JSONField(default={}, encoder=PrettyJSONEncoder)
+    calendar = models.JSONField(default=dict, encoder=PrettyJSONEncoder)
     # TIME_ZONE_CHOICES = [] # Not gonna worry about the choices for now 
     time_zone = models.CharField()
 
     user_ref = models.ForeignKey(User, on_delete=models.CASCADE) # Need this for prod but annoying right now
     # Because these models are repersenting the response of the canvas API, the API doesn't return the user id that we are using in Django currently
 
+    def __repr__(self):
+        return self.name
+    
+    def __str__(self):
+        return self.name
+
 class Assignment(models.Model):
     id = models.IntegerField(primary_key=True)
     name = models.CharField()
     description = models.TextField()
-    due_at = models.DateTimeField()
-    unlock_at = models.DateTimeField()
-    lock_at = models.DateTimeField()
+    due_at = models.DateTimeField(null=True)
+    unlock_at = models.DateTimeField(null=True)
+    lock_at = models.DateTimeField(null=True)
     points_possible = models.IntegerField()
     grade_group_students_individually = models.BooleanField(default=False)
     allowed_attempts = models.IntegerField()
@@ -35,3 +41,9 @@ class Assignment(models.Model):
 
     course_ref = models.ForeignKey(Course, on_delete=models.CASCADE) # Must make this value work in the Assignment serializer. 
     user_ref = models.ForeignKey(User, on_delete=models.CASCADE) # See above
+
+    def __repr__(self):
+        return f"{self.course_ref.name} {self.name}"
+    
+    def __str__(self):
+        return f"{self.course_ref.name} {self.name}"
