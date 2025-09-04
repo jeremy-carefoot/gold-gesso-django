@@ -14,6 +14,7 @@ from pathlib import Path
 from decouple import config
 from datetime import timedelta
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'canvas_api',
     'apps.authentication.apps.AuthenticationConfig',
+    # 'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -195,3 +197,11 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
     'JTI_CLAIM': 'jti',
 }
+
+
+# Celery setup using redis
+
+REDIS_URL = config("REDIS_URL", default='redis://redis:6379/0')
+
+CELERY_BROKER_URL = REDIS_URL
+# CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

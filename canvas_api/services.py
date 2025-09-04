@@ -58,13 +58,36 @@ class CanvasAPIService:
         """Get details of a specific course"""
         return self._make_request('GET', f'/api/v1/courses/{course_id}')
     
-    def get_assignments(self, course_id: int) -> List[Dict]:
+    def get_course_assignments(self, course_id: int, params:dict=dict()) -> List[Dict]:
         """Get assignments for a specific course"""
-        return self._make_request('GET', f'/api/v1/courses/{course_id}/assignments')
+        params["order_by"] = "due_at"
+        return self._make_request('GET', f'/api/v1/courses/{course_id}/assignments', params=params)
     
-    def get_assignment(self, course_id: int, assignment_id: int) -> Dict:
+
+# These views are actually bad because they still need the course id. I need to make them not do that and instead work on all courses
+
+    def get_unsubmitted_assignments(self, course_id: int) -> List[Dict]:
+        """Get unsubmitted assignments for a specific course"""
+        params = {
+            "bucket":"unsubmitted",
+        }
+        return self.get_assignment(course_id=course_id, params=params)
+    
+    def get_overdue_assignments(self, course_id: int) -> List[Dict]:
+        """Get pverdue assignments for a specific course"""
+        params = {
+            "bucket":"overdue",
+        }
+        return self.get_assignment(course_id=course_id, params=params)
+     
+
+
+
+    def get_assignment(self, course_id: int, assignment_id: int) -> Dict: # Make this so that we don't need to pass the course id here
         """Get details of a specific assignment"""
         return self._make_request('GET', f'/api/v1/courses/{course_id}/assignments/{assignment_id}')
+    
+
     
     def get_calendar_events(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> List[Dict]:
         """Get calendar events"""
