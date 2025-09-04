@@ -34,7 +34,7 @@ class CoursesView(APIView):
     def get(self, request):
         """Get list of courses"""
         try:
-            user=self.requeset.user
+            user=self.request.user
             refreash_courses.delay(user.id)
             queryset = Course.objects.filter(user_ref=user.id)
             serializedData = CourseSerializer(queryset, many=True).data
@@ -88,10 +88,10 @@ class AllAssignmentsView(APIView):
     def get(self, request):
         """Get all assignments for all courses"""
         try:
-            user=self.requeset.user
+            user=self.request.user
             refreash_courses.delay(user.id)
             refreash_assignments.delay(user.id)
-            queryset = Assignment.objects.filter(user_ref=user.id)
+            queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
             serializedData = AssignmentSerializer(queryset, many=True).data
             return Response(serializedData, status=status.HTTP_200_OK)
         except Exception as e:
