@@ -34,11 +34,11 @@ class CoursesView(APIView):
     def get(self, request):
         """Get list of courses"""
         try:
-            service = CanvasAPIService()
-            enrollment_state = request.query_params.get('enrollment_state', 'active')
-            courses = service.get_courses(enrollment_state=enrollment_state)
-            serializer = CourseSerializer(courses, many=True)
-            return Response(serializer.data)
+            user=self.requeset.user
+            refreash_courses.delay(user.id)
+            queryset = Course.objects.filter(user_ref=user.id)
+            serializedData = CourseSerializer(queryset, many=True).data
+            return Response(serializedData, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {'error': str(e)},
@@ -87,11 +87,18 @@ class AllAssignmentsView(APIView):
 
     def get(self, request):
         """Get all assignments for all courses"""
-        refreash_courses.delay(self.request.user.id)
-        refreash_assignments.delay(self.request.user.id)
-        queryset = Assignment.objects.all()
-        serializedData = AssignmentSerializer(queryset, many=True).data
-        return Response(serializedData, status=status.HTTP_200_OK)
+        try:
+            user=self.requeset.user
+            refreash_courses.delay(user.id)
+            refreash_assignments.delay(user.id)
+            queryset = Assignment.objects.filter(user_ref=user.id)
+            serializedData = AssignmentSerializer(queryset, many=True).data
+            return Response(serializedData, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def post(self, request):
         pass
