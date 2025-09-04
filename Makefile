@@ -40,6 +40,9 @@ shell:
 migrate:
 	docker-compose exec web python manage.py migrate
 
+makemigrations:
+	docker-compose exec web python manage.py makemigrations
+
 createsuperuser:
 	@echo "Creating superuser with username: $(shell whoami)"
 	docker-compose exec -e DJANGO_SUPERUSER_USERNAME=$(shell whoami) \
