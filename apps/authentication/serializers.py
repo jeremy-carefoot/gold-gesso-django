@@ -37,3 +37,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+
+
+class CanvasTokenSerializer(serializers.ModelSerializer):
+    canvas_auth_token = serializers.CharField(required=True, allow_blank=False)
+    
+    class Meta:
+        model = CustomUser
+        fields = ('canvas_auth_token',)
+    
+    def update(self, instance, validated_data):
+        instance.canvas_auth_token = validated_data.get('canvas_auth_token', instance.canvas_auth_token)
+        instance.save()
+        return instance

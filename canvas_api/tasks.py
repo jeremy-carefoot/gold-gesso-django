@@ -7,7 +7,7 @@ from apps.authentication.models import CustomUser
 def refreash_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
     user = CustomUser.objects.get(id=user_id)
-    service = CanvasAPIService()
+    service = CanvasAPIService(user=user)
     courses = service.get_courses()
     courses_ids = [course['id'] for course in courses]
     for course_id in courses_ids:
@@ -43,7 +43,7 @@ def refreash_assignments(user_id):
 def refreash_courses(user_id):
     """This function processes the canvas API responses for courses and creates Course model instances."""
     user = CustomUser.objects.get(id=user_id)
-    service = CanvasAPIService()
+    service = CanvasAPIService(user=user)
     courses = service.get_courses()
     for course in courses:
         # Filter to only include fields that exist in the Course model
