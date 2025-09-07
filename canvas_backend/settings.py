@@ -213,4 +213,4 @@ CELERY_BROKER_URL = REDIS_URL
 # CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 
-AUTH_USER_MODEL="apps.auth.CustomUser"
+AUTH_USER_MODEL="authentication.CustomUser"
