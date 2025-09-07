@@ -23,7 +23,7 @@ class HealthCheckView(APIView):
     def get(self, request):
         return Response({
             'status': 'healthy',
-            'canvas_configured': bool(settings.CANVAS_API_BASE_URL and settings.CANVAS_API_TOKEN)
+            'canvas_configured': bool(settings.CANVAS_API_BASE_URL)
         })
 
 
@@ -53,7 +53,7 @@ class CourseDetailView(APIView):
     def get(self, request, course_id):
         """Get details of a specific course"""
         try:
-            service = CanvasAPIService()
+            service = CanvasAPIService(user=request.user)
             course = service.get_course(course_id)
             serializer = CourseSerializer(course)
             return Response(serializer.data)
@@ -71,7 +71,7 @@ class CourseAssignmentsView(APIView):
     def get(self, request, course_id):
         """Get assignments for a specific course"""
         try:
-            service = CanvasAPIService()
+            service = CanvasAPIService(user=request.user)
             assignments = service.get_course_assignments(course_id)
             serializer = AssignmentSerializer(assignments, many=True)
             return Response(serializer.data)
@@ -114,7 +114,7 @@ class AssignmentDetailView(APIView):
     def get(self, request, course_id, assignment_id):
         """Get details of a specific assignment"""
         try:
-            service = CanvasAPIService()
+            service = CanvasAPIService(user=request.user)
             assignment = service.get_assignment(course_id, assignment_id)
             serializer = AssignmentSerializer(assignment)
             return Response(serializer.data)
@@ -132,7 +132,7 @@ class CalendarEventsView(APIView):
     def get(self, request):
         """Get calendar events"""
         try:
-            service = CanvasAPIService()
+            service = CanvasAPIService(user=request.user)
             start_date = request.query_params.get('start_date')
             end_date = request.query_params.get('end_date')
             events = service.get_calendar_events(start_date=start_date, end_date=end_date)
@@ -152,7 +152,7 @@ class UserProfileView(APIView):
     def get(self, request):
         """Get current user's profile"""
         try:
-            service = CanvasAPIService()
+            service = CanvasAPIService(user=request.user)
             profile = service.get_user_profile()
             serializer = UserProfileSerializer(profile)
             return Response(serializer.data)

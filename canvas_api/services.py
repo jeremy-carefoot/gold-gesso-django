@@ -6,9 +6,19 @@ from typing import Dict, List, Optional, Any
 class CanvasAPIService:
     """Service class for interacting with Canvas LMS API"""
     
-    def __init__(self):
+    def __init__(self, user=None):
         self.base_url = settings.CANVAS_API_BASE_URL
-        self.token = settings.CANVAS_API_TOKEN
+        
+        # Use user's Canvas token if user is provided, otherwise fall back to settings
+        if user and hasattr(user, 'canvas_auth_token') and user.canvas_auth_token:
+            self.token = user.canvas_auth_token
+        else:
+            # Fallback to settings token (for backwards compatibility or admin use)
+            self.token = settings.CANVAS_API_TOKEN
+            
+        if not self.token:
+            raise ValueError("No Canvas API token available. User must set their Canvas token.")
+            
         self.headers = {
             'Authorization': f'Bearer {self.token}',
             'Content-Type': 'application/json'

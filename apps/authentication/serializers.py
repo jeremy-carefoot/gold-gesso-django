@@ -1,10 +1,10 @@
-from django.contrib.auth.models import User
+from .models import CustomUser
 from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('id', 'username', 'email', 'first_name', 'last_name')
         read_only_fields = ('id',)
 
@@ -14,7 +14,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True)
     
     class Meta:
-        model = User
+        model = CustomUser
         fields = ('username', 'email', 'password', 'password_confirm', 'first_name', 'last_name')
     
     def validate(self, attrs):
@@ -24,7 +24,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('password_confirm')
-        user = User.objects.create_user(
+        user = CustomUser.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
@@ -37,3 +37,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+
+
+class CanvasTokenSerializer(serializers.ModelSerializer):
+    canvas_auth_token = serializers.CharField(required=True, allow_blank=False)
+    
+    class Meta:
+        model = CustomUser
+        fields = ('canvas_auth_token',)
+    
+    def update(self, instance, validated_data):
+        instance.canvas_auth_token = validated_data.get('canvas_auth_token', instance.canvas_auth_token)
+        instance.save()
+        return instance

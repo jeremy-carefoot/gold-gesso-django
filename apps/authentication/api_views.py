@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from .models import CustomUser
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer
+from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer, CanvasTokenSerializer
 
 
 class RegisterView(APIView):
@@ -53,9 +53,9 @@ class LogoutView(APIView):
     
     def post(self, request):
         try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            # refresh_token = request.data["refresh"]
+            # token = RefreshToken(refresh_token)
+            # token.blacklist()
             return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
         except Exception:
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
@@ -90,3 +90,26 @@ def change_password(request):
     user.set_password(new_password)
     user.save()
     return Response({'message': 'Password changed successfully'}, status=status.HTTP_200_OK)
+
+
+class CanvasTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Set or update the user's Canvas authentication token."""
+        serializer = CanvasTokenSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Canvas token updated successfully'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request):
+        """Get the current Canvas token status (whether it's set or not)."""
+        has_token = bool(request.user.canvas_auth_token)
+        return Response({'has_canvas_token': has_token}, status=status.HTTP_200_OK)
+    
+    def delete(self, request):
+        """Remove the Canvas authentication token."""
+        request.user.canvas_auth_token = None
+        request.user.save()
+        return Response({'message': 'Canvas token removed successfully'}, status=status.HTTP_200_OK)

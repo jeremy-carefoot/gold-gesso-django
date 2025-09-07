@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from apps.authentication.models import CustomUser
 import json
 
 class PrettyJSONEncoder(json.JSONEncoder):
@@ -15,7 +15,7 @@ class Course(models.Model):
     # TIME_ZONE_CHOICES = [] # Not gonna worry about the choices for now 
     time_zone = models.CharField()
 
-    user_ref = models.ForeignKey(User, on_delete=models.CASCADE) # Need this for prod but annoying right now
+    user_ref = models.ForeignKey(CustomUser, on_delete=models.CASCADE) # Need this for prod but annoying right now
     # Because these models are repersenting the response of the canvas API, the API doesn't return the user id that we are using in Django currently
 
     def __repr__(self):
@@ -40,7 +40,7 @@ class Assignment(models.Model):
     grading_type = models.CharField(choices=GRADING_TYPE_CHOICES, default="percent")
 
     course_ref = models.ForeignKey(Course, on_delete=models.CASCADE) # Must make this value work in the Assignment serializer. 
-    user_ref = models.ForeignKey(User, on_delete=models.CASCADE) # See above
+    user_ref = models.ForeignKey(CustomUser, on_delete=models.CASCADE) # See above
 
     def __repr__(self):
         return f"{self.course_ref.name} {self.name}"
