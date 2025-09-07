@@ -1,12 +1,12 @@
 from celery import shared_task
 from .services import CanvasAPIService
 from .models import Assignment, Course
-from django.contrib.auth.models import User
+from apps.authentication.models import CustomUser
 
 @shared_task
 def refreash_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
-    user = User.objects.get(id=user_id)
+    user = CustomUser.objects.get(id=user_id)
     service = CanvasAPIService()
     courses = service.get_courses()
     courses_ids = [course['id'] for course in courses]
@@ -42,7 +42,7 @@ def refreash_assignments(user_id):
 @shared_task
 def refreash_courses(user_id):
     """This function processes the canvas API responses for courses and creates Course model instances."""
-    user = User.objects.get(id=user_id)
+    user = CustomUser.objects.get(id=user_id)
     service = CanvasAPIService()
     courses = service.get_courses()
     for course in courses:
