@@ -1,5 +1,4 @@
 import requests
-import logging
 from django.conf import settings
 from typing import Dict, List, Optional, Any
 
@@ -11,7 +10,6 @@ class CanvasAPIService:
         self.base_url = settings.CANVAS_API_BASE_URL
         
         # Use user's Canvas token if user is provided, otherwise fall back to settings
-        logging.info("User making request", user)
         if user and hasattr(user, 'canvas_auth_token') and user.canvas_auth_token:
             self.token = user.canvas_auth_token
         else:

@@ -214,17 +214,3 @@ CELERY_BROKER_URL = REDIS_URL
 
 
 AUTH_USER_MODEL="authentication.CustomUser"
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-}
