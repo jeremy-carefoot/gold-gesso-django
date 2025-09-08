@@ -94,7 +94,7 @@ DATABASES = {
 DB_URL = config('DB_URL', default=None)
 
 if DB_URL:
-    DATABASES['default'] = dj_database_url.parse(config('DB_URL'))
+    DATABASES['default'] = dj_database_url.parse(DB_URL)
 
 
 # Password validation
