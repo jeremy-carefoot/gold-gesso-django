@@ -11,6 +11,7 @@ class CanvasAPIService:
         self.base_url = settings.CANVAS_API_BASE_URL
         
         # Use user's Canvas token if user is provided, otherwise fall back to settings
+        logging.info("User making request", user)
         if user and hasattr(user, 'canvas_auth_token') and user.canvas_auth_token:
             self.token = user.canvas_auth_token
         else:
@@ -28,8 +29,6 @@ class CanvasAPIService:
     def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None) -> Dict:
         """Make a request to the Canvas API"""
         url = f"{self.base_url}{endpoint}"
-        
-        logging.info(f"Making Canvas API request to {url} with headers: {self.headers}")
         
         try:
             response = requests.request(
