@@ -27,6 +27,7 @@ class CanvasAPIService:
     def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None) -> Dict:
         """Make a request to the Canvas API"""
         url = f"{self.base_url}{endpoint}"
+        print("headers", self.headers)
         
         try:
             response = requests.request(

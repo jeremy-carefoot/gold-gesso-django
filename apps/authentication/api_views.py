@@ -104,9 +104,9 @@ class CanvasTokenView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get(self, request):
-        """Get the current Canvas token status (whether it's set or not)."""
-        has_token = bool(request.user.canvas_auth_token)
-        return Response({'has_canvas_token': has_token}, status=status.HTTP_200_OK)
+        """Get the current Canvas token"""
+        token = request.user.canvas_auth_token
+        return Response({'canvas_token': token}, status=status.HTTP_200_OK)
     
     def delete(self, request):
         """Remove the Canvas authentication token."""
