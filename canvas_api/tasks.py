@@ -26,7 +26,7 @@ async def refresh_assignments(user_id):
             for assignment in course_assignments:
                 # Filter to only include fields that exist in the Assignment model
                 assignment_data = {
-                    'id': assignment.get('id'),
+                    'assignment_id': assignment.get('id'),
                     'name': assignment.get('name'),
                     'description': assignment.get('description'),
                     'due_at': assignment.get('due_at'),
@@ -43,10 +43,13 @@ async def refresh_assignments(user_id):
                 }
                 # Remove None values
                 assignment_data = {k: v for k, v in assignment_data.items() if v is not None}
-                # Extract the id for lookup, use the rest as defaults
-                assignment_id = assignment_data.pop('id')
+                # Extract the lookup fields, use the rest as defaults
+                assignment_id = assignment_data.pop('assignment_id')
+                user_ref = assignment_data.pop('user_ref')
+                
                 newAssignment = await Assignment.objects.aupdate_or_create(
-                    id=assignment_id,
+                    assignment_id=assignment_id,
+                    user_ref=user_ref,
                     defaults=assignment_data
                 )
 
@@ -54,22 +57,23 @@ async def refresh_assignments(user_id):
 async def refresh_courses(user_id):
     """This function processes the canvas API responses for courses and creates Course model instances."""
     user = await CustomUser.objects.aget(id=user_id)
-    service = CanvasAPIService(user=user)
-    courses = await service.get_courses()
-    for course in courses:
-        # Filter to only include fields that exist in the Course model
-        course_data = {
-            'id': course.get('id'),
-            'uuid': course.get('uuid'),
-            'name': course.get('name'),
-            'calendar': course.get('calendar', {}),
-            'time_zone': course.get('time_zone'),
-            'user_ref': user
-        }
-        # Remove None values
-        course_data = {k: v for k, v in course_data.items() if v is not None}
-        course_id = course_data.pop('id')
-        newCourse = await Course.objects.aupdate_or_create(
-            id = course_id,
-            defaults=course_data
-            )
+    async with CanvasAPIService(user=user) as service:
+        courses = await service.get_courses()
+        for course in courses:
+            # Filter to only include fields that exist in the Course model (excluding many2many)
+            course_data = {
+                'id': course.get('id'),
+                'uuid': course.get('uuid'),
+                'name': course.get('name'),
+                'calendar': course.get('calendar', {}),
+                'time_zone': course.get('time_zone'),
+                # 'user_ref': user
+            }
+            # Remove None values
+            course_data = {k: v for k, v in course_data.items() if v is not None}
+            course_id = course_data.pop('id')
+            course_obj, created = await Course.objects.aupdate_or_create(
+                id = course_id,
+                defaults=course_data
+                )
+            await course_obj.user_ref.aadd(user)

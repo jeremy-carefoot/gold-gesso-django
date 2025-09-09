@@ -15,8 +15,7 @@ class Course(models.Model):
     # TIME_ZONE_CHOICES = [] # Not gonna worry about the choices for now 
     time_zone = models.CharField()
 
-    user_ref = models.ForeignKey(CustomUser, on_delete=models.CASCADE) # Need this for prod but annoying right now
-    # Because these models are repersenting the response of the canvas API, the API doesn't return the user id that we are using in Django currently
+    user_ref = models.ManyToManyField(CustomUser, related_name='courses')
 
     def __repr__(self):
         return self.name
@@ -25,7 +24,7 @@ class Course(models.Model):
         return self.name
 
 class Assignment(models.Model):
-    id = models.IntegerField(primary_key=True)
+    assignment_id = models.IntegerField(null=True)
     name = models.CharField()
     description = models.TextField()
     due_at = models.DateTimeField(null=True)
@@ -39,8 +38,8 @@ class Assignment(models.Model):
     GRADING_TYPE_CHOICES = [("pass_fail","Pass fail"), ("percent", "Percent"), ("letter_grade", "Letter grade"), ("gpa_scale", "GPA scale"), ("points", "Points"), ("not_graded", "Not graded")]
     grading_type = models.CharField(choices=GRADING_TYPE_CHOICES, default="percent")
 
-    course_ref = models.ForeignKey(Course, on_delete=models.CASCADE) # Must make this value work in the Assignment serializer. 
-    user_ref = models.ForeignKey(CustomUser, on_delete=models.CASCADE) # See above
+    course_ref = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user_ref = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
     def __repr__(self):
         return f"{self.course_ref.name} {self.name}"
