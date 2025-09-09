@@ -1,17 +1,24 @@
-from celery import shared_task
+# from celery import shared_task
 from .services import CanvasAPIService
 from .models import Assignment, Course
 from apps.authentication.models import CustomUser
+import asyncio
 
-@shared_task
-def refreash_assignments(user_id):
+# @shared_task
+
+async def refresh_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
     user = CustomUser.objects.get(id=user_id)
     service = CanvasAPIService(user=user)
-    courses = service.get_courses()
+    courses = await service.get_courses()
     courses_ids = [course['id'] for course in courses]
-    for course_id in courses_ids:
-        course_assignments = service.get_course_assignments(course_id)
+
+    assignment_tasks = [service.get_course_assignments(course_id) for course_id in courses_ids]
+    all_course_assignments = await asyncio.gather(**assignment_tasks)
+
+    # for course_id in courses_ids:
+    for course_assignments in all_course_assignments:
+        # course_assignments = service.get_course_assignments(course_id)
         for assignment in course_assignments:
             # Filter to only include fields that exist in the Assignment model
             assignment_data = {
@@ -39,12 +46,12 @@ def refreash_assignments(user_id):
                 defaults=assignment_data
             )
 
-@shared_task
-def refreash_courses(user_id):
+# @shared_task
+async def refresh_courses(user_id):
     """This function processes the canvas API responses for courses and creates Course model instances."""
     user = CustomUser.objects.get(id=user_id)
     service = CanvasAPIService(user=user)
-    courses = service.get_courses()
+    courses = await service.get_courses()
     for course in courses:
         # Filter to only include fields that exist in the Course model
         course_data = {
