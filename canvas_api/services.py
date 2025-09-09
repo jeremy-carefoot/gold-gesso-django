@@ -1,6 +1,8 @@
 import requests
 from django.conf import settings
 from typing import Dict, List, Optional, Any
+import asyncio
+import aiohttp
 
 
 class CanvasAPIService:
@@ -23,25 +25,43 @@ class CanvasAPIService:
             'Authorization': f'Bearer {self.token}',
             'Content-Type': 'application/json'
         }
+        self.session = None
+
+    async def __aenter__(self):
+        """Create aiohttp session on the context manager entry"""
+        self.session = aiohttp.ClientSession(headers=self.headers)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Close aiohttp session on context manager exit"""
+        if self.session:
+            await self.session.close()
     
-    def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None) -> Dict:
+    async def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None) -> Dict:
         """Make a request to the Canvas API"""
         url = f"{self.base_url}{endpoint}"
+
+        if not self.session:
+            self.session = aiohttp.ClientSession(headers=self.headers)
         
         try:
-            response = requests.request(
+            async with self.session.request(
                 method=method,
                 url=url,
-                headers=self.headers,
+                # headers=self.headers,
                 json=data,
                 params=params
-            )
-            response.raise_for_status()
-            return response.json() if response.content else {}
-        except requests.exceptions.RequestException as e:
+            ) as response:
+                response.raise_for_status()
+                content = await response.text()
+                if content:
+                    import json
+                    return json.loads(content)
+                return {}
+        except aiohttp.ClientError as e:
             raise Exception(f"Canvas API request failed: {str(e)}")
     
-    def get_courses(self, enrollment_state: str = 'active') -> List[Dict]:
+    async def get_courses(self, enrollment_state: str = 'active') -> List[Dict]:
         """Get list of courses for the authenticated user
         
         Canvas API parameters used:
@@ -62,20 +82,20 @@ class CanvasAPIService:
             ],
             'per_page': 100  # Get more results at once
         }
-        return self._make_request('GET', '/api/v1/courses', params=params)
+        return await self._make_request('GET', '/api/v1/courses', params=params)
     
-    def get_course(self, course_id: int) -> Dict:
+    def get_course(self, course_id: int) -> Dict: # Not being used
         """Get details of a specific course"""
         return self._make_request('GET', f'/api/v1/courses/{course_id}')
     
-    def get_course_assignments(self, course_id: int, params:dict=dict()) -> List[Dict]:
+    async def get_course_assignments(self, course_id: int, params:dict=dict()) -> List[Dict]:
         """Get assignments for a specific course"""
         params["order_by"] = "due_at"
-        return self._make_request('GET', f'/api/v1/courses/{course_id}/assignments', params=params)
+        return await self._make_request('GET', f'/api/v1/courses/{course_id}/assignments', params=params)
     
 
 # These views are actually bad because they still need the course id. I need to make them not do that and instead work on all courses
-
+# None of the below are being used
     def get_unsubmitted_assignments(self, course_id: int) -> List[Dict]:
         """Get unsubmitted assignments for a specific course"""
         params = {

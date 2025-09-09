@@ -1,10 +1,13 @@
 from rest_framework import status
+import asyncio
+import threading
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
-from .tasks import refreash_assignments, refreash_courses
+from asgiref.sync import sync_to_async, async_to_sync
+from .tasks import refresh_assignments, refresh_courses
 from .models import Assignment, Course
 
 from .services import CanvasAPIService
@@ -35,7 +38,14 @@ class CoursesView(APIView):
         """Get list of courses"""
         try:
             user=self.request.user
-            refreash_courses(user.id)
+            # Fire and forget using thread - non-blocking
+            thread = threading.Thread(
+                target=lambda: asyncio.run(refresh_courses(user.id))
+            )
+            thread.daemon = True
+            thread.start()
+            
+            # Return stale data immediately
             queryset = Course.objects.filter(user_ref=user.id)
             serializedData = CourseSerializer(queryset, many=True).data
             return Response(serializedData, status=status.HTTP_200_OK)
@@ -44,7 +54,45 @@ class CoursesView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+
+class AllAssignmentsView(APIView):
+    """View which returns all assignments for all courses."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get all assignments for all courses"""
+        try:
+            user=self.request.user
+            # Fire and forget using threads - non-blocking
+            async def run_both_tasks():
+                await asyncio.gather(
+                    refresh_courses(user.id),
+                    refresh_assignments(user.id)
+                )
+            
+            def run_in_thread():
+                asyncio.run(run_both_tasks())
+            
+            thread = threading.Thread(target=run_in_thread)
+            thread.daemon = True  # Don't wait for thread to complete
+            thread.start()
+            
+            # Return stale data immediately
+            queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
+            serializedData = AssignmentSerializer(queryset, many=True).data
+            return Response(serializedData, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def post(self, request):
+        pass
+        # This method will be used to allow the manual assignmnt addition
+
+
 class CachedCoursesView(APIView):
     """View for handling course-related operations"""
     permission_classes = [IsAuthenticated]
@@ -62,7 +110,7 @@ class CachedCoursesView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+# None of the views below are being used
 class CourseDetailView(APIView):
     """View for handling specific course operations"""
     permission_classes = [IsAuthenticated]
@@ -97,30 +145,6 @@ class CourseAssignmentsView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-class AllAssignmentsView(APIView):
-    """View which returns all assignments for all courses."""
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        """Get all assignments for all courses"""
-        try:
-            user=self.request.user
-            refreash_courses(user.id)
-            refreash_assignments(user.id)
-            queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
-            serializedData = AssignmentSerializer(queryset, many=True).data
-            return Response(serializedData, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    def post(self, request):
-        pass
-        # THis method will be used to allow the manual assignmnt addition
-
         
 
 # This should actually be a model view because we don't care to pass the course id when we are looking at a specific assignment.

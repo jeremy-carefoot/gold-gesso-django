@@ -14,18 +14,6 @@ services:
       interval: 2s
       retries: 10
 
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: redis-cli ping
-      interval: 2s
-      retries: 10
-
   web:
     build:
       context: .
@@ -41,24 +29,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-  
-  celery:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    command: celery -A canvas_backend worker -l INFO --concurrency 2
-    volumes:
-      - .:/code
-    env_file:
-      - ./.env.docker
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
 volumes:
   postgres_data:
-  redis_data:
