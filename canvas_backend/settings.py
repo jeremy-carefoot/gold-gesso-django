@@ -199,13 +199,4 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
 }
 
-
-# Celery setup using redis
-
-# REDIS_URL = config("REDIS_URL", default='redis://redis:6379/0')
-
-# CELERY_BROKER_URL = REDIS_URL
-# CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-
 AUTH_USER_MODEL="authentication.CustomUser"
