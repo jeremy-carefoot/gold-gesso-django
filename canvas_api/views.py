@@ -44,6 +44,23 @@ class CoursesView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+class CachedCoursesView(APIView):
+    """View for handling course-related operations"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get list of courses"""
+        try:
+            user=self.request.user
+            queryset = Course.objects.filter(user_ref=user.id)
+            serializedData = CourseSerializer(queryset, many=True).data
+            return Response(serializedData, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CourseDetailView(APIView):
