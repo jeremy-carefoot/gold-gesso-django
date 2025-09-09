@@ -30,6 +30,7 @@ class CanvasAPIService:
     async def __aenter__(self):
         """Create aiohttp session on the context manager entry"""
         self.session = aiohttp.ClientSession(headers=self.headers)
+        return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Close aiohttp session on context manager exit"""
@@ -52,7 +53,11 @@ class CanvasAPIService:
                 params=params
             ) as response:
                 response.raise_for_status()
-                return await response.json() if response.content_length else {}
+                content = await response.text()
+                if content:
+                    import json
+                    return json.loads(content)
+                return {}
         except aiohttp.ClientError as e:
             raise Exception(f"Canvas API request failed: {str(e)}")
     

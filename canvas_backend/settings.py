@@ -168,17 +168,12 @@ CANVAS_API_TOKEN = config('CANVAS_API_TOKEN', default='')
 # Cache Configuration
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
 
-# Session storage (use Redis if available)
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# Session storage (use database)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Simple JWT Configuration
 SIMPLE_JWT = {
@@ -207,9 +202,9 @@ SIMPLE_JWT = {
 
 # Celery setup using redis
 
-REDIS_URL = config("REDIS_URL", default='redis://redis:6379/0')
+# REDIS_URL = config("REDIS_URL", default='redis://redis:6379/0')
 
-CELERY_BROKER_URL = REDIS_URL
+# CELERY_BROKER_URL = REDIS_URL
 # CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 
