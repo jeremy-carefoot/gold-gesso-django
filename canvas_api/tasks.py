@@ -13,7 +13,7 @@ def refresh_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
     user = CustomUser.objects.get(id=user_id)
     channel_layer = get_channel_layer()
-    group_name = f"user_{user_id}_assignments"
+    group_name = "assignments_general"
     
     # Send notification that refresh has started
     async_to_sync(channel_layer.group_send)(

@@ -5,19 +5,11 @@ from django.contrib.auth.models import AnonymousUser
 
 class AssignmentConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope["user"]
+        # Accept all connections (no authentication check)
+        await self.accept()
         
-        # Temporary: Allow all connections for testing
-        print(f"WebSocket connection attempt - User: {self.user}, Type: {type(self.user)}")
-        
-        if isinstance(self.user, AnonymousUser):
-            print("User is anonymous - rejecting connection")
-            await self.close()
-            return
-        
-        print(f"User authenticated: {self.user.id}")
-        # Create a unique group for this user
-        self.group_name = f"user_{self.user.id}_assignments"
+        # Use a general group for all users (temporary)
+        self.group_name = "assignments_general"
         
         # Join user's assignment group
         await self.channel_layer.group_add(
