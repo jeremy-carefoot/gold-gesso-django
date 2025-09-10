@@ -212,3 +212,6 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
 }
+
+# WebSocket configuration
+ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '0.0.0.0'])  # Allow Docker internal IPs
