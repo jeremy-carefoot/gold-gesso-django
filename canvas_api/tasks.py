@@ -10,19 +10,27 @@ from asgiref.sync import async_to_sync
 def refresh_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
     user = CustomUser.objects.get(id=user_id)
+    courses = Course.objects.filter(user_ref=user.id)
+    courses_ids = [course.id for course in courses]
 
     def run_async():
         # Use context manager to properly close session
         async def call_canvas_api():
             async with CanvasAPIService(user=user) as service:
-                courses = await service.get_courses()
-                courses_ids = [course['id'] for course in courses]
                 assignment_tasks = [service.get_course_assignments(course_id) for course_id in courses_ids]
                 all_course_assignments = await asyncio.gather(*assignment_tasks)
             return all_course_assignments
         return asyncio.run(call_canvas_api())
     
     all_course_assignments = run_async()
+    course_refs = {course.id: course for course in courses}
+
+    assignments_to_create = []
+    assignments_to_update = []
+
+    existing_assignments = {
+        (a.assignment_id, a.user_ref.id): a for a in Assignment.objects.filter(user_ref=user)
+    }
 
     for course_assignments in all_course_assignments:
         for assignment in course_assignments:
@@ -40,20 +48,30 @@ def refresh_assignments(user_id):
                 'has_submitted_submissions': assignment.get('has_submitted_submissions', False),
                 'course_id': assignment.get('course_id'),
                 'grading_type': assignment.get('grading_type', 'percent'),
-                'course_ref': Course.objects.get(id=assignment["course_id"]),
+                'course_ref': course_refs[assignment["course_id"]],
                 'user_ref': user
             }
             # Remove None values
             assignment_data = {k: v for k, v in assignment_data.items() if v is not None}
             # Extract the lookup fields, use the rest as defaults
             assignment_id = assignment_data.pop('assignment_id')
-            user_ref = assignment_data.pop('user_ref')
+            # user_ref = assignment_data.pop('user_ref')
+
+            existing_key = (assignment_id, user.id)
+            if existing_key in existing_assignments:
+                existing_assignment = existing_assignments[existing_key]
+                for field, value in assignment_data.items():
+                    if field != "user_ref": # Don't need to update the user_ref
+                        setattr(existing_assignment, field, value)
+                assignments_to_update.append(existing_assignment)
+            else:
+                assignments_to_create.append(Assignment(assignment_id=assignment_id, **assignment_data))
             
-            newAssignment = Assignment.objects.update_or_create(
-                assignment_id=assignment_id,
-                user_ref=user_ref,
-                defaults=assignment_data
-            )
+    if assignments_to_create:
+        Assignment.objects.bulk_create(assignments_to_create, ignore_conflicts=True)
+            
+    if assignments_to_update:
+        Assignment.objects.bulk_update(assignments_to_update, fields=['name', 'description', 'due_at', 'unlock_at', 'lock_at','points_possible', 'grade_group_students_individually','allowed_attempts', 'has_submitted_submissions', 'course_id','grading_type', 'course_ref'])
 
 # @shared_task
 def refresh_courses(user_id):
