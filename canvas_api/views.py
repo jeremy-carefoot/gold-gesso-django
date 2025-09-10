@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from django.conf import settings
 from .tasks import refresh_assignments, refresh_courses
 from .models import Assignment, Course
+import threading
 
 from .services import CanvasAPIService
 from .serializers import (
@@ -54,11 +55,24 @@ class AllAssignmentsView(APIView):
         """Get all assignments for all courses"""
         try:
             user=self.request.user
-            refresh_courses(user.id)
-            refresh_assignments(user.id)
+            
+            # Return cached data immediately
             queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
             serializedData = AssignmentSerializer(queryset, many=True).data
-            return Response(serializedData, status=status.HTTP_200_OK)
+            
+            # Trigger background refresh
+            def background_refresh():
+                refresh_courses(user.id)
+                refresh_assignments(user.id)
+            
+            thread = threading.Thread(target=background_refresh)
+            thread.daemon = True
+            thread.start()
+            
+            return Response({
+                'assignments': serializedData,
+                'refresh_in_progress': True
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {'error': str(e)},

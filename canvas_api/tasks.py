@@ -4,12 +4,26 @@ from .models import Assignment, Course
 from apps.authentication.models import CustomUser
 import asyncio
 from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from .serializers import AssignmentSerializer
 
 # @shared_task
 
 def refresh_assignments(user_id):
     """This function processes the canvas API responses for assignments and creates Assignment model instances."""
     user = CustomUser.objects.get(id=user_id)
+    channel_layer = get_channel_layer()
+    group_name = f"user_{user_id}_assignments"
+    
+    # Send notification that refresh has started
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'assignment_update',
+            'update_type': 'refresh_started',
+            'message': 'Fetching latest assignments from Canvas...'
+        }
+    )
 
     def run_async():
         # Use context manager to properly close session
@@ -54,6 +68,21 @@ def refresh_assignments(user_id):
                 user_ref=user_ref,
                 defaults=assignment_data
             )
+    
+    # Get updated assignments and send via WebSocket
+    updated_assignments = Assignment.objects.filter(user_ref=user_id).order_by("due_at")
+    serialized_data = AssignmentSerializer(updated_assignments, many=True).data
+    
+    # Send notification that refresh is complete with updated data
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'assignment_update',
+            'update_type': 'assignments_updated',
+            'data': serialized_data,
+            'message': 'Assignments have been updated'
+        }
+    )
 
 # @shared_task
 def refresh_courses(user_id):

@@ -34,6 +34,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lamb
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # Add daphne at the top for ASGI support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'channels',  # Add channels
     'canvas_api',
     'apps.authentication.apps.AuthenticationConfig',
     # 'django_celery_beat',
@@ -200,3 +202,13 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL="authentication.CustomUser"
+
+# Channels Configuration
+ASGI_APPLICATION = 'canvas_backend.asgi.application'
+
+# Use in-memory channel layer (no Redis required)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
