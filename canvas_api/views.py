@@ -46,8 +46,8 @@ class CoursesView(APIView):
             )
 
 
-class AllAssignmentsView(APIView):
-    """View which returns all assignments for all courses."""
+class UpdateAssignmentsView(APIView):
+    """View which updates the cached assignments for all courses."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -56,9 +56,10 @@ class AllAssignmentsView(APIView):
             user=self.request.user
             refresh_courses(user.id)
             refresh_assignments(user.id)
-            queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
-            serializedData = AssignmentSerializer(queryset, many=True).data
-            return Response(serializedData, status=status.HTTP_200_OK)
+            # queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
+            # serializedData = AssignmentSerializer(queryset, many=True).data
+            # return Response(serializedData, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {'error': str(e)},

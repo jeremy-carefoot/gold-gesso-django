@@ -7,7 +7,7 @@ from .views import (
     AssignmentDetailView,
     CalendarEventsView,
     UserProfileView,
-    AllAssignmentsView,
+    UpdateAssignmentsView,
     CachedCoursesView,
     CachedAssignmentsView,
 )
@@ -21,7 +21,7 @@ urlpatterns = [
     path('courses/<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
     path('courses/<int:course_id>/assignments/', CourseAssignmentsView.as_view(), name='assignments'),
     # path('courses/<int:course_id>/assignments/<int:assignment_id>/', AssignmentDetailView.as_view(), name='assignment-detail'),
-    path('all-assignments/', AllAssignmentsView.as_view(), name="all-assignments"),
+    path('all-assignments/update/', UpdateAssignmentsView.as_view(), name="update-assignments"),
     path('all-assignments/cached/', CachedAssignmentsView.as_view(), name="cached-assignments"),
     path('calendar-events/', CalendarEventsView.as_view(), name='calendar-events'),
     path('profile/', UserProfileView.as_view(), name='user-profile'),
