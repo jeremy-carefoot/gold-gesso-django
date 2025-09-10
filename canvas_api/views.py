@@ -70,6 +70,23 @@ class AllAssignmentsView(APIView):
         # This method will be used to allow the manual assignmnt addition
 
 
+class CachedAssignmentsView(APIView):
+    """View for getting cached assignments"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get list of cached assignments"""
+        try:
+            user=self.request.user
+            queryset = Assignment.objects.filter(user_ref=user.id)
+            serializedData = AssignmentSerializer(queryset, many=True).data
+            return Response(serializedData, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class CachedCoursesView(APIView):
     """View for handling course-related operations"""
     permission_classes = [IsAuthenticated]
