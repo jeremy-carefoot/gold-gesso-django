@@ -37,6 +37,11 @@ class CanvasAPIService:
         if self.session:
             await self.session.close()
     
+    async def close_session(self):
+        if self.session:
+            await self.session.close()
+            self.session = None
+    
     async def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None) -> Dict:
         """Make a request to the Canvas API"""
         url = f"{self.base_url}{endpoint}"

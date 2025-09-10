@@ -1,12 +1,9 @@
 from rest_framework import status
-import asyncio
-import threading
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
-from asgiref.sync import sync_to_async, async_to_sync
 from .tasks import refresh_assignments, refresh_courses
 from .models import Assignment, Course
 
@@ -38,14 +35,7 @@ class CoursesView(APIView):
         """Get list of courses"""
         try:
             user=self.request.user
-            # Fire and forget using thread - non-blocking
-            thread = threading.Thread(
-                target=lambda: asyncio.run(refresh_courses(user.id))
-            )
-            thread.daemon = True
-            thread.start()
-            
-            # Return stale data immediately
+            refresh_courses(user.id)
             queryset = Course.objects.filter(user_ref=user.id)
             serializedData = CourseSerializer(queryset, many=True).data
             return Response(serializedData, status=status.HTTP_200_OK)
@@ -64,21 +54,8 @@ class AllAssignmentsView(APIView):
         """Get all assignments for all courses"""
         try:
             user=self.request.user
-            # Fire and forget using threads - non-blocking
-            async def run_both_tasks():
-                await asyncio.gather(
-                    refresh_courses(user.id),
-                    refresh_assignments(user.id)
-                )
-            
-            def run_in_thread():
-                asyncio.run(run_both_tasks())
-            
-            thread = threading.Thread(target=run_in_thread)
-            thread.daemon = True  # Don't wait for thread to complete
-            thread.start()
-            
-            # Return stale data immediately
+            refresh_courses(user.id)
+            refresh_assignments(user.id)
             queryset = Assignment.objects.filter(user_ref=user.id).order_by("due_at")
             serializedData = AssignmentSerializer(queryset, many=True).data
             return Response(serializedData, status=status.HTTP_200_OK)
