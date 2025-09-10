@@ -35,7 +35,7 @@ restart:
 	$(MAKE) start
 
 shell:
-	docker-compose exec web bash
+	docker-compose exec web python manage.py shell
 
 migrate:
 	docker-compose exec web python manage.py migrate
