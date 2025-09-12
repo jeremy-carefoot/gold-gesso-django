@@ -18,11 +18,11 @@ def refresh_assignments(user_id):
         async def call_canvas_api():
             async with CanvasAPIService(user=user) as service:
                 assignment_tasks = [service.get_course_assignments(course_id) for course_id in courses_ids]
-                all_course_assignments = await asyncio.gather(*assignment_tasks)
-            return all_course_assignments
+                all_assignments = await asyncio.gather(*assignment_tasks)
+            return all_assignments
         return asyncio.run(call_canvas_api())
     
-    all_course_assignments = run_async()
+    all_assignments = run_async()
     course_refs = {course.id: course for course in courses}
 
     assignments_to_create = []
@@ -32,7 +32,7 @@ def refresh_assignments(user_id):
         (a.assignment_id, a.user_ref.id): a for a in Assignment.objects.filter(user_ref=user)
     }
 
-    for course_assignments in all_course_assignments:
+    for course_assignments in all_assignments:
         for assignment in course_assignments:
             # Filter to only include fields that exist in the Assignment model
             assignment_data = {
@@ -45,9 +45,10 @@ def refresh_assignments(user_id):
                 'points_possible': assignment.get('points_possible'),
                 'grade_group_students_individually': assignment.get('grade_group_students_individually', False),
                 'allowed_attempts': assignment.get('allowed_attempts'),
-                'has_submitted_submissions': assignment.get('has_submitted_submissions', False),
                 'course_id': assignment.get('course_id'),
                 'grading_type': assignment.get('grading_type', 'percent'),
+                'is_submitted': False, # Assignments created by refresh will by default be is_submitted = False
+                'is_custom': False, # Assignments fetched from canvas API will never be custom
                 'course_ref': course_refs[assignment["course_id"]],
                 'user_ref': user
             }
@@ -61,7 +62,7 @@ def refresh_assignments(user_id):
             if existing_key in existing_assignments:
                 existing_assignment = existing_assignments[existing_key]
                 for field, value in assignment_data.items():
-                    if field != "user_ref": # Don't need to update the user_ref
+                    if not (field in ["user_ref","is_submitted"]): # Don't need to update the user_ref, should not change is_submitted
                         setattr(existing_assignment, field, value)
                 assignments_to_update.append(existing_assignment)
             else:

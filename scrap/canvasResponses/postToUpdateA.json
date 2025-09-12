@@ -1,0 +1,13 @@
+{
+    "assignments": [
+        {
+            "assignment_id": 1,
+            "key":"value",
+            "key1":"value"
+        },
+        {
+            "assignmnt_id": 2,
+            "key": "value"
+        }
+    ]
+}

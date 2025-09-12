@@ -3,9 +3,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 from django.conf import settings
 from .tasks import refresh_assignments, refresh_courses
 from .models import Assignment, Course
+import traceback
+import hashlib
 
 from .services import CanvasAPIService
 from .serializers import (
@@ -41,12 +44,13 @@ class CoursesView(APIView):
             return Response(serializedData, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
-class UpdateAssignmentsView(APIView):
+class RefreshAssignmentsView(APIView):
     """View which updates the cached assignments for all courses."""
     permission_classes = [IsAuthenticated]
 
@@ -62,14 +66,11 @@ class UpdateAssignmentsView(APIView):
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
-    def post(self, request):
-        pass
-        # This method will be used to allow the manual assignmnt addition
-
+        
 
 class CachedAssignmentsView(APIView):
     """View for getting cached assignments"""
@@ -84,9 +85,11 @@ class CachedAssignmentsView(APIView):
             return Response(serializedData, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 class CachedCoursesView(APIView):
     """View for handling course-related operations"""
@@ -101,9 +104,88 @@ class CachedCoursesView(APIView):
             return Response(serializedData, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+class UpdateAssignmentView(APIView):
+    """View for handling assignment update post requests"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Update respective assignment with new given values"""
+        try:
+            user=self.request.user
+            assignment_response_objects = self.request.data.get("assignments")
+            for aro in assignment_response_objects:
+                assignment_id = aro.get("assignment_id")
+                if (not assignment_id) or (assignment_id is None):
+                    raise Exception("Must pass assignment_id in post request")
+                assignment = Assignment.objects.get(user_ref=user.id, assignment_id=assignment_id)
+                vaild_assignment_fields = [field.name for field in Assignment._meta.fields]
+                if all(elem in vaild_assignment_fields for elem in aro):
+                    for field, value in aro.items():
+                        setattr(assignment, field, value)
+                    assignment.save()
+                else:
+                    raise Exception("Invalid assignment field passed in post request")
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+
+class CreateAssignmentView(APIView):
+    """View for handling assignment creation post requests"""
+    def post(self, request):
+        try:
+            user = self.request.user
+            # self.request.data.get("assignment") # ?? or just straight up one thing?
+            data = request.data.copy()
+            data["user_ref"] = user.id
+            data["is_custom"] = True
+            serializer = AssignmentSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                created_assignment = serializer.save()
+                unique_string = f"{user.id}_{created_assignment.id}_{user.username}"
+                hash_value = int(hashlib.md5(unique_string.encode()).hexdigest()[:8], 16)
+                created_assignment.assignment_id = hash_value
+                created_assignment.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class DeleteAssignmentView(APIView):
+    """View for handling assignment delete requests"""
+    def delete(self, request, **kwargs):
+        try:
+            user = self.request.user
+
+            assignment_id = kwargs.get("assignment_id", None) # Need to know which one Jeremy wants to give me
+            if assignment_id:
+                assignment = get_object_or_404(Assignment, assignment_id=assignment_id, user_ref=user.id)
+            else:
+                assignment = get_object_or_404(Assignment, id=kwargs.get('id'))
+
+            assignment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
 
 # None of the views below are being used
 class CourseDetailView(APIView):
@@ -119,7 +201,8 @@ class CourseDetailView(APIView):
             return Response(serializer.data)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -137,7 +220,8 @@ class CourseAssignmentsView(APIView):
             return Response(serializer.data)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
@@ -156,7 +240,8 @@ class AssignmentDetailView(APIView):
             return Response(serializer.data)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -176,7 +261,8 @@ class CalendarEventsView(APIView):
             return Response(serializer.data)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -194,6 +280,7 @@ class UserProfileView(APIView):
             return Response(serializer.data)
         except Exception as e:
             return Response(
-                {'error': str(e)},
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

@@ -24,20 +24,21 @@ class Course(models.Model):
         return self.name
 
 class Assignment(models.Model):
-    assignment_id = models.IntegerField(null=True)
-    name = models.CharField()
-    description = models.TextField()
+    assignment_id = models.PositiveBigIntegerField(null=True)
+    name = models.CharField(blank=False)
+    description = models.TextField(null=True)
     due_at = models.DateTimeField(null=True)
     unlock_at = models.DateTimeField(null=True)
     lock_at = models.DateTimeField(null=True)
-    points_possible = models.IntegerField()
+    points_possible = models.IntegerField(null=True)
     grade_group_students_individually = models.BooleanField(default=False)
-    allowed_attempts = models.IntegerField()
-    has_submitted_submissions = models.BooleanField(default=False)
-    course_id = models.IntegerField()
+    allowed_attempts = models.IntegerField(null=True)
+    course_id = models.IntegerField(null=True, blank=True) # Wait what?
     GRADING_TYPE_CHOICES = [("pass_fail","Pass fail"), ("percent", "Percent"), ("letter_grade", "Letter grade"), ("gpa_scale", "GPA scale"), ("points", "Points"), ("not_graded", "Not graded")]
     grading_type = models.CharField(choices=GRADING_TYPE_CHOICES, default="percent")
 
+    is_submitted = models.BooleanField(default=False) # Changed from canvas api generated field to user set field
+    is_custom = models.BooleanField(default=False) # Was the assignment user created?
     course_ref = models.ForeignKey(Course, on_delete=models.CASCADE)
     user_ref = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
