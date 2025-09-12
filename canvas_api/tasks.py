@@ -72,7 +72,7 @@ def refresh_assignments(user_id):
         Assignment.objects.bulk_create(assignments_to_create, ignore_conflicts=True)
             
     if assignments_to_update:
-        Assignment.objects.bulk_update(assignments_to_update, fields=['name', 'description', 'due_at', 'unlock_at', 'lock_at','points_possible', 'grade_group_students_individually','allowed_attempts', 'has_submitted_submissions', 'course_id','grading_type', 'course_ref'])
+        Assignment.objects.bulk_update(assignments_to_update, fields=['name', 'description', 'due_at', 'unlock_at', 'lock_at','points_possible', 'grade_group_students_individually','allowed_attempts', 'course_id', 'grading_type', 'course_ref'])
 
 # @shared_task
 def refresh_courses(user_id):
