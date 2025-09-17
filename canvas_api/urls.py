@@ -29,7 +29,7 @@ urlpatterns = [
     path('update-assignment/', UpdateAssignmentView.as_view(), name="update-assignment"),
     path('create-assignment/', CreateAssignmentView.as_view(), name="create-assignment"),
     # path('delete-assignment/<int:id>/', DeleteAssignmentView.as_view(), name="delete-assignment"), # In case we want to use the id
-    path('delete-assignment/<int:assignment_id>/', DeleteAssignmentView.as_view(), name="delete-assignment"), # Using the assignment_id for now can change later
+    path('delete-assignments/', DeleteAssignmentView.as_view(), name="delete-assignment"), # Using the assignment_id for now can change later
     path('calendar-events/', CalendarEventsView.as_view(), name='calendar-events'),
     path('profile/', UserProfileView.as_view(), name='user-profile'),
 ]

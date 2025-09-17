@@ -3,7 +3,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
 from django.conf import settings
 from .tasks import refresh_assignments, refresh_courses
 from .models import Assignment, Course
@@ -171,13 +170,9 @@ class DeleteAssignmentView(APIView):
         try:
             user = self.request.user
 
-            assignment_id = kwargs.get("assignment_id", None) # Need to know which one Jeremy wants to give me
-            if assignment_id:
-                assignment = get_object_or_404(Assignment, assignment_id=assignment_id, user_ref=user.id)
-            else:
-                assignment = get_object_or_404(Assignment, id=kwargs.get('id'))
-
-            assignment.delete()
+            query = request.GET.get("ids")
+            assignment_ids = query.split(",")
+            Assignment.objects.filter(assignment_id__in=assignment_ids, user_ref=user.id).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response(
