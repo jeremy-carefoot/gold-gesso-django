@@ -33,7 +33,7 @@ class Assignment(models.Model):
     points_possible = models.IntegerField(null=True)
     grade_group_students_individually = models.BooleanField(default=False)
     allowed_attempts = models.IntegerField(null=True)
-    course_id = models.IntegerField(null=True, blank=True) # Wait what?
+    # course_id = models.IntegerField(null=True, blank=True) # Wait what?
     GRADING_TYPE_CHOICES = [("pass_fail","Pass fail"), ("percent", "Percent"), ("letter_grade", "Letter grade"), ("gpa_scale", "GPA scale"), ("points", "Points"), ("not_graded", "Not graded")]
     grading_type = models.CharField(choices=GRADING_TYPE_CHOICES, default="percent")
 

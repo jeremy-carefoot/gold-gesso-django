@@ -45,7 +45,7 @@ def refresh_assignments(user_id):
                 'points_possible': assignment.get('points_possible'),
                 'grade_group_students_individually': assignment.get('grade_group_students_individually', False),
                 'allowed_attempts': assignment.get('allowed_attempts'),
-                'course_id': assignment.get('course_id'),
+                # 'course_id': assignment.get('course_id'),
                 'grading_type': assignment.get('grading_type', 'percent'),
                 'is_submitted': False, # Assignments created by refresh will by default be is_submitted = False
                 'is_custom': False, # Assignments fetched from canvas API will never be custom
