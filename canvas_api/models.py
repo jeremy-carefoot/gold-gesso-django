@@ -26,8 +26,8 @@ class Course(models.Model):
 class Assignment(models.Model):
     assignment_id = models.PositiveBigIntegerField(null=True)
     name = models.CharField(blank=False)
-    description = models.TextField(null=True)
-    due_at = models.DateTimeField(null=True)
+    description = models.TextField(null=True, blank=True)
+    due_at = models.DateTimeField(null=True, blank=True)
     unlock_at = models.DateTimeField(null=True)
     lock_at = models.DateTimeField(null=True)
     points_possible = models.IntegerField(null=True)
