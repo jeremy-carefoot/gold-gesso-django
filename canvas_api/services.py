@@ -10,6 +10,7 @@ class CanvasAPIService:
     
     def __init__(self, user=None):
         self.base_url = settings.CANVAS_API_BASE_URL
+        self.assignment_pagination_limit = 100
         
         # Use user's Canvas token if user is provided, otherwise fall back to settings
         if user and hasattr(user, 'canvas_auth_token') and user.canvas_auth_token:
@@ -85,7 +86,7 @@ class CanvasAPIService:
                 'course_image',   # Course banner image
                 'concluded'       # Include concluded courses
             ],
-            'per_page': 100  # Get more results at once
+            'per_page': self.assignment_pagination_limit  # Get more results at once
         }
         return await self._make_request('GET', '/api/v1/courses', params=params)
     
@@ -96,6 +97,7 @@ class CanvasAPIService:
     async def get_course_assignments(self, course_id: int, params:dict=dict()) -> List[Dict]:
         """Get assignments for a specific course"""
         params["order_by"] = "due_at"
+        params["per_page"] = 100
         return await self._make_request('GET', f'/api/v1/courses/{course_id}/assignments', params=params)
     
 
