@@ -1,7 +1,7 @@
 # Canvas Planner - Development Roadmap
 
 ## Project Overview
-A Django REST API backend that integrates with Canvas LMS to provide enhanced planning and organization features for university students.
+A Django REST API backend that integrates with Canvas LMS to provide enhanced planning and organization features for university students. Should be useful.
 
 ## Current Status ✅
 - Basic Django project structure with Django REST Framework
