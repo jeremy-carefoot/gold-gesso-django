@@ -20,11 +20,12 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "your_project/wsgi.py"
+      "dest": "canvas_backend/wsgi.py"
     },
     {
       "src": "/static/(.*)",
       "dest": "/static/$1"
     }
-  ]
+  ],
+  "outputDirectory": "staticfiles"
 }
