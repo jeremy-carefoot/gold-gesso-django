@@ -15,13 +15,13 @@ cd uofa_planner_django
 # Edit .env.docker with your Canvas API token
 
 # Build the Django containers
-make docker-build
+make build
 
 # Start all services (Django + PostgreSQL + Redis)
-make docker-up
+make start
 
 # Run initial migrations
-make docker-migrate
+make migrate
 
 # Your API will be available at http://localhost:8000
 ```
