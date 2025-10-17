@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
+from django.utils import timezone
 
 from .serializers import UserSerializer, UserRegistrationSerializer, LoginSerializer, CanvasTokenSerializer
 
@@ -36,6 +37,8 @@ class LoginView(APIView):
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
             user = authenticate(username=username, password=password)
+            user.last_login = timezone.now()
+            user.save()
             
             if user:
                 refresh = RefreshToken.for_user(user)
