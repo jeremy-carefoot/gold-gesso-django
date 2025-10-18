@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from .models import CustomUser
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -37,11 +37,9 @@ class LoginView(APIView):
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
             user = authenticate(username=username, password=password)
-            user.last_login = timezone.now()
-            user.save()
-            
             if user:
                 refresh = RefreshToken.for_user(user)
+                login(request, user)
                 return Response({
                     'user': UserSerializer(user).data,
                     'refresh': str(refresh),
