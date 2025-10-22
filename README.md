@@ -35,7 +35,7 @@ make venv
 # Activate virtual environment
 source venv/bin/activate
 
-# Copy environment file and add your Canvas credentials
+# Copy the environment file and add your Canvas credentials
 cp .env.example .env
 # Edit .env with your Canvas API token
 
