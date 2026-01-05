@@ -140,6 +140,8 @@ class UpdateAssignmentView(APIView):
 
 class CreateAssignmentView(APIView):
     """View for handling assignment creation post requests"""
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         try:
             user = self.request.user
@@ -166,6 +168,8 @@ class CreateAssignmentView(APIView):
 
 class DeleteAssignmentView(APIView):
     """View for handling assignment delete requests"""
+    permission_classes = [IsAuthenticated]
+
     def delete(self, request, **kwargs):
         try:
             user = self.request.user
@@ -180,7 +184,33 @@ class DeleteAssignmentView(APIView):
                  "Traceback": traceback.format_exc()},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+
+class DeleteAllView(APIView):
+    """View for deleting all the courses (and thus assignments) for a user"""
+    permission_classes = [IsAuthenticated]
+
+    # Normally used when starting a new semester. So that the database is not full of old assignments and non-active courses
+    # We rely on refresh to repopulate only the active courses and their assignments
+    def delete(self, request, **kwargs):
+        try:
+            user = self.request.user
+            # user = CustomUser.objects.get(id=user.id) # I don't think this is needed
+            # Remove user from all courses
+            courses = Course.objects.filter(user_ref=user.id)
+            for course in courses:
+                course.user_ref.remove(user)
+            # Delete all assignments for user
+            Assignment.objects.filter(user_ref=user.id).delete()
+            
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': str(e),
+                 "Traceback": traceback.format_exc()},
+                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 # None of the views below are being used
 class CourseDetailView(APIView):
