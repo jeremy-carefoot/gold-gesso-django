@@ -62,7 +62,7 @@ make run
 - `make migrate` - Run Django database migrations
 - `make run` - Start Django development server
 - `make test` - Run tests
-- `make clean` - Remove virtual environment and cache files
+- `make clean` - Remove virtual environment and cache files 
 
 ### Docker Development
 - `make docker-build` - Build Docker image
