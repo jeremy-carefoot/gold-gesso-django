@@ -86,7 +86,7 @@ import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
         env='DB_URL',
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=config('DB_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=0,
         ssl_require=True
     )
