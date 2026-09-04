@@ -85,17 +85,12 @@ import dj_database_url
 
 DATABASES = {
     'default': dj_database_url.config(
+        env='DB_URL',
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
+        conn_max_age=0,
+        ssl_require=True
     )
 }
-
-# Production database
-DB_URL = config('DB_URL', default=None)
-
-if DB_URL:
-    DATABASES['default'] = dj_database_url.parse(DB_URL)
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
