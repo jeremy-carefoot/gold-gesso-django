@@ -2,10 +2,9 @@
   "version": 2,
   "builds": [
     {
-      "src": "canvas_backend/wsgi.py",
+      "src": "/canvas_backend/wsgi.py",
       "use": "@vercel/python",
       "config": {
-            "maxLambdaSize": "15mb",
             "runtime": "python3.12"
         }
     },
@@ -19,12 +18,12 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "canvas_backend/wsgi.py"
-    },
-    {
       "src": "/static/(.*)",
       "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "canvas_backend/wsgi.py"
     }
   ]
 }
